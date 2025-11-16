@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Скруглитель углов изображений</title>
+  <title>Скруглитель фото</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -32,39 +32,10 @@
     const App = () => {
       const [originalImage, setOriginalImage] = useState(null);
       const [processedImage, setProcessedImage] = useState(null);
-      const [borderRadius, setBorderRadius] = useState(30);
-      const [radiusInput, setRadiusInput] = useState('30');
-      const [maxRadius, setMaxRadius] = useState(100);
       const [error, setError] = useState('');
       const [isLoading, setIsLoading] = useState(false);
       const canvasRef = useRef(null);
       const imageRef = useRef(null);
-
-      useEffect(() => {
-        setRadiusInput(String(Math.round(borderRadius)));
-      }, [borderRadius]);
-
-      useEffect(() => {
-        if (!originalImage) return;
-
-        const image = new Image();
-        image.src = originalImage;
-        image.onload = () => {
-          imageRef.current = image;
-          const max = Math.min(image.width, image.height) / 2;
-          setMaxRadius(max);
-          if (borderRadius > max) {
-            setBorderRadius(max);
-          }
-          processImage();
-        };
-      }, [originalImage]);
-
-      useEffect(() => {
-        if (imageRef.current) {
-          processImage();
-        }
-      }, [borderRadius]);
 
       const processImage = useCallback(() => {
         if (!imageRef.current) return;
@@ -75,31 +46,38 @@
             const canvas = canvasRef.current;
             const ctx = canvas.getContext('2d');
             
-            canvas.width = image.width;
-            canvas.height = image.height;
+            const size = Math.min(image.width, image.height);
+            canvas.width = size;
+            canvas.height = size;
             
-            const r = Math.min(borderRadius, maxRadius);
+            const radius = size / 2;
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, size, size);
             ctx.beginPath();
-            ctx.moveTo(r, 0);
-            ctx.lineTo(canvas.width - r, 0);
-            ctx.arcTo(canvas.width, 0, canvas.width, r, r);
-            ctx.lineTo(canvas.width, canvas.height - r);
-            ctx.arcTo(canvas.width, canvas.height, canvas.width - r, canvas.height, r);
-            ctx.lineTo(r, canvas.height);
-            ctx.arcTo(0, canvas.height, 0, canvas.height - r, r);
-            ctx.lineTo(0, r);
-            ctx.arcTo(0, 0, r, 0, r);
+            ctx.arc(radius, radius, radius, 0, Math.PI * 2, true);
             ctx.closePath();
             ctx.clip();
             
-            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+            const sx = (image.width - size) / 2;
+            const sy = (image.height - size) / 2;
+            
+            ctx.drawImage(image, sx, sy, size, size, 0, 0, size, size);
             
             setProcessedImage(canvas.toDataURL('image/png'));
             setIsLoading(false);
         }, 10);
-      }, [borderRadius, maxRadius]);
+      }, []);
+
+      useEffect(() => {
+        if (!originalImage) return;
+
+        const image = new Image();
+        image.src = originalImage;
+        image.onload = () => {
+          imageRef.current = image;
+          processImage();
+        };
+      }, [originalImage, processImage]);
 
 
       const handleFileChange = (e) => {
@@ -130,31 +108,12 @@
         };
         reader.readAsDataURL(file);
       };
-
-      const handleSliderChange = (e) => {
-          setBorderRadius(Number(e.target.value));
-      };
-
-      const handleRadiusInputChange = (e) => {
-          const textValue = e.target.value;
-          setRadiusInput(textValue);
-
-          if (textValue === '') {
-              setBorderRadius(0);
-              return;
-          }
-          
-          const parsedValue = parseInt(textValue, 10);
-          if (!isNaN(parsedValue)) {
-              setBorderRadius(Math.max(0, Math.min(maxRadius, parsedValue)));
-          }
-      };
       
       const handleDownload = () => {
         if (!processedImage) return;
         
         const link = document.createElement('a');
-        link.download = `skruglennoe-izobrazhenie.png`;
+        link.download = `skruglennoye-foto.png`;
         link.href = processedImage;
         document.body.appendChild(link);
         link.click();
@@ -165,8 +124,6 @@
         setOriginalImage(null);
         setProcessedImage(null);
         imageRef.current = null;
-        setBorderRadius(30);
-        setRadiusInput('30');
         setError('');
         const fileInput = document.getElementById('file-upload');
         if (fileInput) fileInput.value = '';
@@ -180,8 +137,8 @@
                     
                     {/* Левая колонка / Загрузка */}
                     <div className={`w-full md:w-1/3 flex flex-col justify-center transition-all duration-300 ${originalImage ? 'md:w-1/3' : 'md:w-full'}`}>
-                        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2 text-center md:text-left">Скруглитель углов</h1>
-                        <p className="text-gray-500 mb-6 text-center md:text-left">Загрузите изображение и настройте радиус скругления.</p>
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2 text-center md:text-left">Скруглитель фото</h1>
+                        <p className="text-gray-500 mb-6 text-center md:text-left">Загрузите изображение, чтобы сделать его идеально круглым.</p>
                         
                         {!originalImage && (
                           <label htmlFor="file-upload" className="relative cursor-pointer bg-gray-50 hover:bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center transition-colors">
@@ -196,37 +153,6 @@
 
                         {originalImage && (
                             <div className="space-y-6 mt-4">
-                                <div>
-                                    <label htmlFor="radius-slider" className="block text-sm font-medium text-gray-700">
-                                        Радиус скругления: <span className="font-bold text-indigo-600">{Math.round(borderRadius)} пикс</span>
-                                    </label>
-                                    <div className="mt-2">
-                                        <input
-                                            id="radius-slider"
-                                            type="range"
-                                            min="0"
-                                            max={maxRadius}
-                                            step="1"
-                                            value={borderRadius}
-                                            onChange={handleSliderChange}
-                                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                                            aria-label="Ползунок радиуса скругления"
-                                        />
-                                    </div>
-                                    <div className="flex items-center space-x-2 mt-2">
-                                        <input 
-                                            type="text" 
-                                            min="0"
-                                            max={maxRadius}
-                                            value={radiusInput} 
-                                            onChange={handleRadiusInputChange}
-                                            className="w-20 text-center border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                            aria-label="Ввод радиуса скругления"
-                                        />
-                                        <span className="text-sm text-gray-600">пикс</span>
-                                    </div>
-                                </div>
-                                
                                 <div className="flex flex-col space-y-3">
                                     <button
                                         onClick={handleDownload}
@@ -257,7 +183,7 @@
                                 <div className="inline-block">
                                    <img
                                        src={processedImage}
-                                       alt="Обработанное изображение со скругленными углами"
+                                       alt="Обработанное круглое изображение"
                                        className="max-w-full max-h-full object-contain"
                                        style={{ maxHeight: '60vh' }}
                                    />
