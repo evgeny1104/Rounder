@@ -173,8 +173,8 @@
       };
       
       return (
-        <div className="font-sans py-1">
-            <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl p-6 md:p-8 overflow-hidden mx-auto">
+        <div className="font-sans py-1 flex justify-center">
+            <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl p-6 md:p-8 overflow-hidden">
                 <canvas ref={canvasRef} style={{ display: 'none' }} />
                 <div className="flex flex-col md:flex-row md:space-x-8">
                     
@@ -200,7 +200,7 @@
                                     <label htmlFor="radius-slider" className="block text-sm font-medium text-gray-700">
                                         Радиус скругления: <span className="font-bold text-indigo-600">{Math.round(borderRadius)} пикс</span>
                                     </label>
-                                    <div className="flex items-center space-x-4 mt-2">
+                                    <div className="mt-2">
                                         <input
                                             id="radius-slider"
                                             type="range"
@@ -212,6 +212,8 @@
                                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                                             aria-label="Ползунок радиуса скругления"
                                         />
+                                    </div>
+                                    <div className="flex items-center space-x-2 mt-2">
                                         <input 
                                             type="text" 
                                             min="0"
@@ -221,6 +223,7 @@
                                             className="w-20 text-center border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                             aria-label="Ввод радиуса скругления"
                                         />
+                                        <span className="text-sm text-gray-600">пикс</span>
                                     </div>
                                 </div>
                                 
